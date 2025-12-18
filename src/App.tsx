@@ -1,11 +1,8 @@
 import './App.css';
+import Map from './components/Map.tsx';
 
 function App() {
-  return (
-    <>
-      <h1>Deck.gl + CARTO Demo</h1>
-    </>
-  );
+  return <Map />;
 }
 
 export default App;
