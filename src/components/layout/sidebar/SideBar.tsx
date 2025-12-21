@@ -4,10 +4,15 @@ export function SideBar({ children }: { children: React.ReactNode }) {
   return (
     <Box
       component="aside"
+      id="story-card"
       sx={{
+        padding: '1.75rem',
+        zIndex: 1,
+        margin: '1.5rem',
         width: '20%',
-        p: 2,
-        overflowY: 'auto',
+        maxWidth: '480px',
+        maxHeight: '100vh',
+        overflow: 'scroll',
       }}
     >
       {children}

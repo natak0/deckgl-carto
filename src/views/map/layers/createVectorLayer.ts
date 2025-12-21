@@ -5,9 +5,21 @@ import {
   vectorTableSource,
 } from '@deck.gl/carto';
 import type { Layer } from '@deck.gl/core';
-import { cartoConfig } from '../../../config/config';
+import { cartoConfig } from '@/config/config';
+import type { PointLayerConfig, TilesetLayerConfig } from '@/types/types';
 
-export function createVectorLayer(): Layer[] {
+export function createVectorLayer(
+  pointConfig: PointLayerConfig,
+  tilesetConfig: TilesetLayerConfig
+): Layer[] {
+  const { radius, fillColor, outlineColor, outlineWidth } = pointConfig;
+  const {
+    fillColor: tilesetFillColor,
+    /*     outlineColor: tilesetOutlineColor,
+    outlineWidth: tilesetOutlineWidth,
+    colorBy: tilesetColorBy, */
+  } = tilesetConfig;
+  console.log('radius', radius);
   const pointSource = vectorTableSource({
     ...cartoConfig,
     tableName: 'carto-demo-data.demo_tables.retail_stores',
@@ -20,8 +32,10 @@ export function createVectorLayer(): Layer[] {
     new VectorTileLayer({
       id: 'retail-stores',
       data: pointSource,
-      pointRadiusMinPixels: 3,
-      getFillColor: [200, 0, 80],
+      pointRadiusMinPixels: radius,
+      getFillColor: fillColor,
+      getLineColor: outlineColor,
+      getLineWidth: outlineWidth,
       pickable: true,
     }),
     new VectorTileLayer({
@@ -33,7 +47,7 @@ export function createVectorLayer(): Layer[] {
       getFillColor: colorBins({
         attr: 'total_pop',
         domain: [0, 0.01, 0.05, 0.1, 0.5, 1, 2, 5],
-        colors: 'SunsetDark',
+        colors: tilesetFillColor,
       }),
       getLineColor: [255, 255, 255, 60],
       lineWidthMinPixels: 0.5,

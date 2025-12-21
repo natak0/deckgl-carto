@@ -4,6 +4,7 @@ import { BASEMAP } from '@deck.gl/carto';
 import { useEffect, useMemo, useRef } from 'react';
 import type { MapViewState } from '@deck.gl/core';
 import { createVectorLayer } from './layers/createVectorLayer';
+import type { PointLayerConfig, TilesetLayerConfig } from '@/types/types';
 
 const INITIAL_VIEW_STATE: MapViewState = {
   latitude: 39.8097343,
@@ -13,10 +14,21 @@ const INITIAL_VIEW_STATE: MapViewState = {
   pitch: 30,
 };
 
-function Map() {
+function Map({
+  pointConfig,
+  tilesetConfig,
+}: {
+  pointConfig: PointLayerConfig;
+  tilesetConfig: TilesetLayerConfig;
+}) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const deckCanvasRef = useRef<HTMLCanvasElement | null>(null);
-  const layers = useMemo(() => createVectorLayer(), []);
+  const deckRef = useRef<Deck | null>(null);
+
+  const layers = useMemo(
+    () => createVectorLayer(pointConfig, tilesetConfig),
+    [pointConfig, tilesetConfig]
+  );
 
   useEffect(() => {
     const deck = new Deck({
@@ -25,6 +37,7 @@ function Map() {
       controller: true,
       layers,
     });
+    deckRef.current = deck;
 
     const map = new maplibregl.Map({
       container: mapContainerRef.current!,
@@ -44,6 +57,12 @@ function Map() {
       deck.finalize();
     };
   }, []);
+
+  useEffect(() => {
+    if (deckRef.current) {
+      deckRef.current.setProps({ layers });
+    }
+  }, [layers]);
 
   return (
     <>
