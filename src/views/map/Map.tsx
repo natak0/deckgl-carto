@@ -2,16 +2,10 @@ import maplibregl from 'maplibre-gl';
 import { Deck } from '@deck.gl/core';
 import { BASEMAP } from '@deck.gl/carto';
 import { useEffect, useRef } from 'react';
+import type { MapViewState } from '@deck.gl/core';
+import { createVectorLayer } from './layers/createVectorLayer';
 
-interface State {
-  latitude: number;
-  longitude: number;
-  zoom: number;
-  bearing: number;
-  pitch: number;
-}
-
-const INITIAL_VIEW_STATE: State = {
+const INITIAL_VIEW_STATE: MapViewState = {
   latitude: 39.8097343,
   longitude: -98.5556199,
   zoom: 4,
@@ -28,6 +22,7 @@ function Map() {
       canvas: deckCanvasRef.current!,
       initialViewState: INITIAL_VIEW_STATE,
       controller: true,
+      layers: createVectorLayer(),
     });
 
     const map = new maplibregl.Map({

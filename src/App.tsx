@@ -1,8 +1,13 @@
+import { StrictMode } from 'react';
 import './App.css';
-import Map from './components/Map.tsx';
+import Map from './views/map/Map.tsx';
 
 function App() {
-  return <Map />;
+  return (
+    <StrictMode>
+      <Map />
+    </StrictMode>
+  );
 }
 
 export default App;
