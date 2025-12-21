@@ -1,7 +1,7 @@
 import maplibregl from 'maplibre-gl';
 import { Deck } from '@deck.gl/core';
 import { BASEMAP } from '@deck.gl/carto';
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import type { MapViewState } from '@deck.gl/core';
 import { createVectorLayer } from './layers/createVectorLayer';
 
@@ -16,13 +16,14 @@ const INITIAL_VIEW_STATE: MapViewState = {
 function Map() {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const deckCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const layers = useMemo(() => createVectorLayer(), []);
 
   useEffect(() => {
     const deck = new Deck({
       canvas: deckCanvasRef.current!,
       initialViewState: INITIAL_VIEW_STATE,
       controller: true,
-      layers: createVectorLayer(),
+      layers,
     });
 
     const map = new maplibregl.Map({

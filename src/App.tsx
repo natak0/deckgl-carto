@@ -1,11 +1,11 @@
 import { StrictMode } from 'react';
 import './App.css';
-import Map from './views/map/Map.tsx';
+import { MapViewContainer } from './views/map/MapViewContainer.tsx';
 
 function App() {
   return (
     <StrictMode>
-      <Map />
+      <MapViewContainer />
     </StrictMode>
   );
 }
