@@ -10,7 +10,8 @@ import type { PointLayerConfig, TilesetLayerConfig } from '@/types/types';
 
 export function createVectorLayer(
   pointConfig: PointLayerConfig,
-  tilesetConfig: TilesetLayerConfig
+  tilesetConfig: TilesetLayerConfig,
+  onHover?: (info: PickingInfo) => void
 ): Layer[] {
   const { radius, fillColor, outlineColor, outlineWidth } = pointConfig;
   const {
@@ -43,9 +44,7 @@ export function createVectorLayer(
       }),
       getLineColor: outlineColor,
       lineWidthMinPixels: tilesetOutlineWidth,
-      onHover: (info: PickingInfo) => {
-        console.log(info?.object?.properties);
-      },
+      onHover,
     }),
     new VectorTileLayer({
       id: 'retail-stores',

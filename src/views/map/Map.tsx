@@ -1,10 +1,14 @@
 import maplibregl from 'maplibre-gl';
 import { Deck } from '@deck.gl/core';
 import { BASEMAP } from '@deck.gl/carto';
-import { useEffect, useMemo, useRef } from 'react';
-import type { MapViewState } from '@deck.gl/core';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
+import type { MapViewState, PickingInfo } from '@deck.gl/core';
 import { createVectorLayer } from './layers/createVectorLayer';
-import type { PointLayerConfig, TilesetLayerConfig } from '@/types/types';
+import type {
+  PointLayerConfig,
+  SocioDemographicsProperties,
+  TilesetLayerConfig,
+} from '@/types/types';
 
 const INITIAL_VIEW_STATE: MapViewState = {
   latitude: 39.8097343,
@@ -25,6 +29,25 @@ function Map({
   const deckCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const deckRef = useRef<Deck | null>(null);
 
+  const formatTooltip = useCallback((props?: SocioDemographicsProperties) => {
+    if (!props) return null;
+    return `GEOID: ${props.geoid}
+            Total population: ${props.total_pop}
+            Households: ${props.households}
+            Median income: ${props.median_income}
+            Income per capita: ${props.income_per_capita}`;
+  }, []);
+
+  const getTooltip = useCallback(
+    ({ object }: PickingInfo) => {
+      const text = formatTooltip(
+        object?.properties as SocioDemographicsProperties | undefined
+      );
+      return text ? { text } : null;
+    },
+    [formatTooltip]
+  );
+
   const layers = useMemo(
     () => createVectorLayer(pointConfig, tilesetConfig),
     [pointConfig, tilesetConfig, deckRef.current]
@@ -35,6 +58,7 @@ function Map({
       canvas: deckCanvasRef.current!,
       initialViewState: INITIAL_VIEW_STATE,
       controller: true,
+      getTooltip,
       layers: layers,
     });
     deckRef.current = deck;
