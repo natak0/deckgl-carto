@@ -4,25 +4,25 @@ import { useState } from 'react';
 import type { PointLayerConfig, TilesetLayerConfig } from '@/types/types';
 import { SideBar } from '@/components/layout/sidebar/SideBar';
 import { LayerControls } from '@/components/controls/LayerControls';
+import { TILESET_COLOR_BY, TILESET_COLUMNS } from '@/types/types';
 
 export function MapViewContainer() {
   const [pointConfig, setPointConfig] = useState<PointLayerConfig>({
     radius: 3,
-    fillColor: [0, 128, 255, 180],
+    fillColor: [44, 162, 95, 180],
     outlineColor: [0, 0, 0, 200],
     outlineWidth: 1,
   });
   const [tilesetConfig, setTilesetConfig] = useState<TilesetLayerConfig>({
-    fillColor: 'SunsetDark',
+    colorPalette: TILESET_COLOR_BY[0],
     outlineColor: [80, 80, 80, 200],
-    outlineWidth: 1,
+    outlineWidth: 0.5,
+    column: TILESET_COLUMNS[0],
   });
-
-  const columns: string[] = [];
 
   return (
     <Box
-      component="div"
+      component="main"
       sx={{
         display: 'flex',
         flexDirection: 'row',
@@ -34,13 +34,12 @@ export function MapViewContainer() {
         <LayerControls
           pointConfig={pointConfig}
           tilesetConfig={tilesetConfig}
-          columns={columns}
           onPointChange={setPointConfig}
           onTilesetChange={setTilesetConfig}
         />
       </SideBar>
       <Box
-        component="main"
+        component="div"
         sx={{
           flex: 1,
           position: 'relative',

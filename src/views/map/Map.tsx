@@ -27,7 +27,7 @@ function Map({
 
   const layers = useMemo(
     () => createVectorLayer(pointConfig, tilesetConfig),
-    [pointConfig, tilesetConfig]
+    [pointConfig, tilesetConfig, deckRef.current]
   );
 
   useEffect(() => {
@@ -35,7 +35,7 @@ function Map({
       canvas: deckCanvasRef.current!,
       initialViewState: INITIAL_VIEW_STATE,
       controller: true,
-      layers,
+      layers: layers,
     });
     deckRef.current = deck;
 
