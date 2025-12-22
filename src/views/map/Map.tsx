@@ -6,6 +6,7 @@ import type { MapViewState, PickingInfo } from '@deck.gl/core';
 import { createVectorLayer } from './layers/createVectorLayer';
 import type {
   PointLayerConfig,
+  RetailStoreProperties,
   SocioDemographicsProperties,
   TilesetLayerConfig,
 } from '@/types/types';
@@ -29,19 +30,37 @@ function Map({
   const deckCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const deckRef = useRef<Deck | null>(null);
 
-  const formatTooltip = useCallback((props?: SocioDemographicsProperties) => {
-    if (!props) return null;
-    return `GEOID: ${props.geoid}
-            Total population: ${props.total_pop}
-            Households: ${props.households}
-            Median income: ${props.median_income}
-            Income per capita: ${props.income_per_capita}`;
-  }, []);
+  const formatTooltip = useCallback(
+    (
+      props?: SocioDemographicsProperties | RetailStoreProperties
+    ): string | null => {
+      if (!props) return null;
+      if ('store_id' in props) {
+        return `Store ID: ${props.store_id}
+                Type: ${props.storetype}
+                Revenue: ${props.revenue}
+                Size (m2): ${props.size_m2}
+                Address: ${props.address}, ${props.city}, ${props.state} ${props.zip}`;
+      }
+      if ('geoid' in props) {
+        return `GEOID: ${props.geoid}
+                Total population: ${props.total_pop}
+                Households: ${props.households}
+                Median income: ${props.median_income}
+                Income per capita: ${props.income_per_capita}`;
+      }
+      return null;
+    },
+    []
+  );
 
   const getTooltip = useCallback(
     ({ object }: PickingInfo) => {
       const text = formatTooltip(
-        object?.properties as SocioDemographicsProperties | undefined
+        object?.properties as
+          | SocioDemographicsProperties
+          | RetailStoreProperties
+          | undefined
       );
       return text ? { text } : null;
     },
