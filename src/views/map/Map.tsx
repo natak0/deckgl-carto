@@ -11,7 +11,10 @@ import type {
   SocioDemographicsProperties,
   TilesetLayerConfig,
 } from '@/types/types';
-import type { CategoryResponse } from '@carto/api-client';
+import type {
+  CategoryResponse,
+  VectorTableSourceResponse,
+} from '@carto/api-client';
 import { cartoConfig } from '@/config/config';
 import { createWidgets } from './widgets/createWidgets';
 import { debounce } from './widgets/utils';
@@ -37,9 +40,10 @@ function Map({
   onRevenueSumChange,
   onCategoriesChange,
 }: MapProps) {
-  const [dataSource, setDataSource] = useState<any>(null);
+  const [dataSource, setDataSource] =
+    useState<VectorTableSourceResponse | null>(null);
   const [, setRevenueSum] = useState<number | null>(null);
-  const [, setCategories] = useState<CategoryResponse>({});
+  const [, setCategories] = useState<CategoryResponse>();
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const deckCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const deckRef = useRef<Deck | null>(null);
@@ -103,9 +107,8 @@ function Map({
     onCategoriesChange?.(initialWidgets?.categories ?? []);
   };
 
-  const debouncedUpdateSpatialFilter = useCallback(
-    debounce(async (viewState: MapViewState) => {
-      if (!dataSourceRef.current) return;
+  const debouncedUpdateSpatialFilter = debounce(
+    async (viewState: MapViewState) => {
       const viewport = new WebMercatorViewport(viewState);
       const filter = createViewportSpatialFilter(viewport.getBounds());
       if (!filter) return;
@@ -120,8 +123,8 @@ function Map({
 
       setRevenueSum(sum);
       onRevenueSumChange?.(sum);
-    }, 300),
-    [dataSourceRef.current, onCategoriesChange, onRevenueSumChange]
+    },
+    300
   );
 
   const tilesetSource = useMemo(
@@ -130,13 +133,13 @@ function Map({
         ...cartoConfig,
         sqlQuery: `SELECT total_pop, households, median_income, income_per_capita, g.geom as geom, g.geoid FROM \`carto-do-public-data.usa_acs.demographics_sociodemographics_usa_blockgroup_2015_5yrs_20142018\` d JOIN \`carto-do-public-data.carto.geography_usa_blockgroup_2015\` g ON d.geoid=g.geoid `,
       }),
-    []
+    [tilesetConfig]
   );
 
   const layers = useMemo(
     () =>
       createVectorLayer(pointConfig, tilesetConfig, dataSource, tilesetSource),
-    [pointConfig, tilesetConfig, deckRef.current, dataSource, tilesetSource]
+    [pointConfig, tilesetConfig, dataSource, tilesetSource]
   );
 
   useEffect(() => {

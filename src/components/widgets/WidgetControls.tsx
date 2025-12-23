@@ -31,15 +31,15 @@ export function WidgetControls({
         <Typography variant="body1">
           {revenueSum
             ? `The total revenue for visible area: ${revenueSum?.toLocaleString()}`
-            : 'No revenue data available'}
+            : 'Zoom in or out to see revenue data'}
         </Typography>
       </Box>
       {categories && categories.length > 0 && (
         <Box sx={{ width: '100%', height: 240 }}>
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer minWidth="100%" minHeight="100%">
             <BarChart data={categories}>
               <XAxis dataKey="name" hide />
-              <YAxis hide />
+              <YAxis />
               <RechartsTooltip />
               <Bar dataKey="value" fill="#3398DB" />
             </BarChart>

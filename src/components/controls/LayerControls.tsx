@@ -5,6 +5,15 @@ import {
   type TilesetLayerConfig,
 } from '@/types/types';
 import { Box, Slider, Select, MenuItem, Divider } from '@mui/material';
+import { useMemo } from 'react';
+
+function hexToRgb(hex: string): [number, number, number] {
+  const normalized = hex.replace('#', '');
+  const r = parseInt(normalized.substring(0, 2), 16);
+  const g = parseInt(normalized.substring(2, 4), 16);
+  const b = parseInt(normalized.substring(4, 6), 16);
+  return [r, g, b];
+}
 
 type LayerControlsProps = {
   pointConfig: PointLayerConfig;
@@ -19,6 +28,13 @@ export function LayerControls({
   onPointChange,
   onTilesetChange,
 }: LayerControlsProps) {
+  const fillHex = useMemo(() => {
+    if (!pointConfig.fillColor) return '#2ca25f';
+    const [r, g, b, a = 255] = pointConfig.fillColor;
+    const toHex = (n: number) => n.toString(16).padStart(2, '0');
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}${toHex(a)}`;
+  }, [pointConfig.fillColor]);
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       <h3>Stores (points)</h3>
@@ -39,8 +55,29 @@ export function LayerControls({
         }
       />
 
+      <span>Point fill color</span>
+      <input
+        type="color"
+        id="color-picker"
+        value={fillHex.slice(0, 7)}
+        onChange={(e) => {
+          const hex = e.target.value;
+          const rgb = hexToRgb(hex);
+          onPointChange({
+            ...pointConfig,
+            fillColor: [
+              rgb[0],
+              rgb[1],
+              rgb[2],
+              pointConfig.fillColor?.[3] ?? 255,
+            ],
+          });
+        }}
+      />
+
       <h3>Demographics (polygons)</h3>
       <Divider variant="middle" sx={{ margin: '10px 0' }} />
+
       <span>Fill color by</span>
       <Select
         value={tilesetConfig.column ? tilesetConfig.column : TILESET_COLUMNS[0]}
@@ -56,7 +93,6 @@ export function LayerControls({
         ))}
       </Select>
 
-      <span>Color palette</span>
       <Select
         value={
           tilesetConfig.colorPalette
@@ -74,8 +110,10 @@ export function LayerControls({
           </MenuItem>
         ))}
       </Select>
+
       <Divider variant="middle" sx={{ margin: '10px 0' }} />
       <span>Stroke width</span>
+
       <Slider
         aria-label="Stroke width"
         value={tilesetConfig.outlineWidth}
