@@ -4,7 +4,14 @@ import {
   type PointLayerConfig,
   type TilesetLayerConfig,
 } from '@/types/types';
-import { Box, Slider, Select, MenuItem, Divider } from '@mui/material';
+import {
+  Box,
+  Slider,
+  Select,
+  MenuItem,
+  Divider,
+  Typography,
+} from '@mui/material';
 import { useMemo } from 'react';
 
 function hexToRgb(hex: string): [number, number, number] {
@@ -37,8 +44,8 @@ export function LayerControls({
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-      <h3>Stores (points)</h3>
-      <span>Radius</span>
+      <Typography variant="h6">Stores (points)</Typography>
+      <Typography variant="body1">Radius</Typography>
       <Slider
         aria-label="Scatter plot radius"
         value={pointConfig.radius}
@@ -55,10 +62,11 @@ export function LayerControls({
         }
       />
 
-      <span>Point fill color</span>
+      <Typography variant="body1">Point fill color</Typography>
       <input
         type="color"
         id="color-picker"
+        aria-label="Point fill color"
         value={fillHex.slice(0, 7)}
         onChange={(e) => {
           const hex = e.target.value;
@@ -75,10 +83,10 @@ export function LayerControls({
         }}
       />
 
-      <h3>Demographics (polygons)</h3>
+      <Typography variant="h6">Demographics (polygons)</Typography>
       <Divider variant="middle" sx={{ margin: '10px 0' }} />
 
-      <span>Fill color by</span>
+      <Typography variant="body1">Fill color by</Typography>
       <Select
         value={tilesetConfig.column ? tilesetConfig.column : TILESET_COLUMNS[0]}
         onChange={(e) =>
@@ -112,7 +120,7 @@ export function LayerControls({
       </Select>
 
       <Divider variant="middle" sx={{ margin: '10px 0' }} />
-      <span>Stroke width</span>
+      <Typography variant="body1">Stroke width</Typography>
 
       <Slider
         aria-label="Stroke width"

@@ -40,6 +40,8 @@ export function MapViewContainer() {
         flexDirection: 'row',
         flex: 1,
         position: 'relative',
+        backgroundColor: 'azure',
+        color: '#213547',
       }}
     >
       <SideBar>
