@@ -1,73 +1,23 @@
-# React + TypeScript + Vite
+# Deck.gl + CARTO React App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Summary
 
-Currently, two official plugins are available:
+- Visualizes two datasets (retail stores as points, sociodemographics as polygons/tiles) with Deck.gl and CARTO.
+- Provides UI controls to adjust fill color, outline, radius, and color-by-column for each layer.
+- Shows tooltips on hover with feature attributes (stores and demographics).
+- Supports widget-style metrics: revenue sum and store counts by store type for the visible viewport.
+- Ready to deploy as a Vite React app.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+How to run
 
-## React Compiler
+1. Install deps: `npm install` (tested with stable version for node v22.14.0 (npm v11.7.0))
+2. Set env vars for CARTO: `VITE_API_BASE_URL` and `VITE_API_ACCESS_TOKEN`
+3. Start dev server: `npm run dev`
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Key paths
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- `src/views/map/Map.tsx`: Deck.gl + MapLibre setup and widget hooks
+- `src/components/controls/LayerControls.tsx`: map style controls (Material UI)
+- `src/components/widgets/WidgetControls.tsx`: revenue sum and store-type histogram (build with recharts)
+- `src/views/map/widgets/createWidgets.ts`: widget data (formula + categories)
+- `src/views/map/widgets/createVectorLayer.ts`: vector point and tileset layers
