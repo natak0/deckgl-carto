@@ -1,4 +1,5 @@
 import { Box, Typography } from '@mui/material';
+import type { CategoryResponse } from '@carto/api-client';
 import {
   ResponsiveContainer,
   BarChart,
@@ -10,7 +11,7 @@ import {
 
 type WidgetControlsProps = {
   revenueSum?: number | null;
-  categories?: { name: string; value: number }[];
+  categories?: CategoryResponse;
 };
 
 export function WidgetControls({

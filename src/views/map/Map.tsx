@@ -11,9 +11,17 @@ import type {
   SocioDemographicsProperties,
   TilesetLayerConfig,
 } from '@/types/types';
+import type { CategoryResponse } from '@carto/api-client';
 import { cartoConfig } from '@/config/config';
 import { createWidgets } from './widgets/createWidgets';
 import { debounce } from './widgets/utils';
+
+interface MapProps {
+  pointConfig: PointLayerConfig;
+  tilesetConfig: TilesetLayerConfig;
+  onRevenueSumChange?: (value: number | null) => void;
+  onCategoriesChange?: (value: CategoryResponse) => void;
+}
 
 const INITIAL_VIEW_STATE: MapViewState = {
   latitude: 39.8097343,
@@ -28,20 +36,14 @@ function Map({
   tilesetConfig,
   onRevenueSumChange,
   onCategoriesChange,
-}: {
-  pointConfig: PointLayerConfig;
-  tilesetConfig: TilesetLayerConfig;
-  onRevenueSumChange?: (value: number | null) => void;
-  onCategoriesChange?: (value: { name: string; value: number }[]) => void;
-}) {
+}: MapProps) {
   const [dataSource, setDataSource] = useState<any>(null);
   const [, setRevenueSum] = useState<number | null>(null);
-  const [, setCategories] = useState<any[]>([]);
+  const [, setCategories] = useState<CategoryResponse>({});
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const deckCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const deckRef = useRef<Deck | null>(null);
   const dataSourceRef = useRef<any>(null);
-  const tilesetSourceRef = useRef<any>(null);
 
   const formatTooltip = useCallback(
     (
@@ -80,16 +82,61 @@ function Map({
     [formatTooltip]
   );
 
-  const tilesetSource = vectorQuerySource({
-    ...cartoConfig,
-    sqlQuery: `select total_pop, households, median_income, income_per_capita, g.geom as geom, g.geoid from \`carto-do-public-data.usa_acs.demographics_sociodemographics_usa_blockgroup_2015_5yrs_20142018\` d join \`carto-do-public-data.carto.geography_usa_blockgroup_2015\` g on d.geoid=g.geoid `,
-  });
-  tilesetSourceRef.current = tilesetSource;
+  const initSource = async () => {
+    const source = await vectorTableSource({
+      ...cartoConfig,
+      tableName: 'carto-demo-data.demo_tables.retail_stores',
+    });
+    setDataSource(source);
+    dataSourceRef.current = source;
+
+    const initialFilter = createViewportSpatialFilter(
+      new WebMercatorViewport(INITIAL_VIEW_STATE).getBounds()
+    );
+    if (!initialFilter) return;
+    const initialWidgets = await createWidgets(source, initialFilter);
+    if (!initialWidgets) return;
+    const initialSum = initialWidgets?.formula?.value ?? null;
+    setCategories(initialWidgets?.categories ?? []);
+    setRevenueSum(initialSum);
+    onRevenueSumChange?.(initialSum);
+    onCategoriesChange?.(initialWidgets?.categories ?? []);
+  };
+
+  const debouncedUpdateSpatialFilter = useCallback(
+    debounce(async (viewState: MapViewState) => {
+      if (!dataSourceRef.current) return;
+      const viewport = new WebMercatorViewport(viewState);
+      const filter = createViewportSpatialFilter(viewport.getBounds());
+      if (!filter) return;
+      const widgets = await createWidgets(dataSourceRef.current, filter);
+      const sum = widgets?.formula?.value ?? null;
+      if (widgets?.categories) {
+        setCategories(widgets?.categories);
+      }
+      if (onCategoriesChange && widgets?.categories) {
+        onCategoriesChange(widgets.categories);
+      }
+
+      setRevenueSum(sum);
+      onRevenueSumChange?.(sum);
+    }, 300),
+    [dataSourceRef.current, onCategoriesChange, onRevenueSumChange]
+  );
+
+  const tilesetSource = useMemo(
+    () =>
+      vectorQuerySource({
+        ...cartoConfig,
+        sqlQuery: `SELECT total_pop, households, median_income, income_per_capita, g.geom as geom, g.geoid FROM \`carto-do-public-data.usa_acs.demographics_sociodemographics_usa_blockgroup_2015_5yrs_20142018\` d JOIN \`carto-do-public-data.carto.geography_usa_blockgroup_2015\` g ON d.geoid=g.geoid `,
+      }),
+    []
+  );
 
   const layers = useMemo(
     () =>
       createVectorLayer(pointConfig, tilesetConfig, dataSource, tilesetSource),
-    [pointConfig, tilesetConfig, deckRef.current]
+    [pointConfig, tilesetConfig, deckRef.current, dataSource, tilesetSource]
   );
 
   useEffect(() => {
@@ -129,41 +176,6 @@ function Map({
       deck.finalize();
     };
   }, []);
-
-  const initSource = async () => {
-    const source = await vectorTableSource({
-      ...cartoConfig,
-      tableName: 'carto-demo-data.demo_tables.retail_stores',
-    });
-    setDataSource(source);
-    dataSourceRef.current = source;
-
-    const initialFilter = createViewportSpatialFilter(
-      new WebMercatorViewport(INITIAL_VIEW_STATE).getBounds()
-    );
-    const initialWidgets = await createWidgets(source, initialFilter);
-    const initialSum = initialWidgets?.formula?.value ?? null;
-    setCategories(initialWidgets?.categories ?? []);
-    setRevenueSum(initialSum);
-    onRevenueSumChange?.(initialSum);
-    onCategoriesChange?.(initialWidgets?.categories ?? []);
-  };
-
-  const debouncedUpdateSpatialFilter = debounce(
-    async (viewState: MapViewState) => {
-      const ds = dataSourceRef.current;
-      if (!ds) return;
-      const viewport = new WebMercatorViewport(viewState);
-      const filter = createViewportSpatialFilter(viewport.getBounds());
-      const widgets = await createWidgets(ds, filter);
-      const sum = widgets?.formula?.value ?? null;
-      setCategories(widgets?.categories ?? []);
-      setRevenueSum(sum);
-      onRevenueSumChange?.(sum);
-      onCategoriesChange?.(widgets?.categories ?? []);
-    },
-    300
-  );
 
   useEffect(() => {
     if (deckRef.current) {

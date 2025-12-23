@@ -1,8 +1,14 @@
+import type {
+  SpatialFilter,
+  VectorTableSourceResponse,
+  CategoryResponse,
+} from '@carto/api-client';
+
 export async function createWidgets(
-  dataSource: any,
-  currentViewStatePolygon: any
+  dataSource: VectorTableSourceResponse,
+  currentViewStatePolygon: SpatialFilter
 ) {
-  if (!dataSource) return null;
+  if (!dataSource || !dataSource.widgetSource) return null;
 
   const formula = await dataSource.widgetSource.getFormula({
     column: 'revenue',
@@ -10,11 +16,12 @@ export async function createWidgets(
     spatialFilter: currentViewStatePolygon,
   });
 
-  const revenueByStoretype = await dataSource.widgetSource.getCategories({
-    column: 'storetype',
-    operation: 'count',
-    spatialFilter: currentViewStatePolygon,
-  });
+  const revenueByStoretype: CategoryResponse =
+    await dataSource.widgetSource.getCategories({
+      column: 'storetype',
+      operation: 'count',
+      spatialFilter: currentViewStatePolygon,
+    });
 
   return {
     formula,
