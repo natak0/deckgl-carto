@@ -1,7 +1,8 @@
 import maplibregl from 'maplibre-gl';
-import { Deck } from '@deck.gl/core';
-import { BASEMAP } from '@deck.gl/carto';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { Deck, WebMercatorViewport } from '@deck.gl/core';
+import { BASEMAP, vectorQuerySource, vectorTableSource } from '@deck.gl/carto';
+import { createViewportSpatialFilter } from '@carto/api-client';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { MapViewState, PickingInfo } from '@deck.gl/core';
 import { createVectorLayer } from './layers/createVectorLayer';
 import type {
@@ -10,6 +11,9 @@ import type {
   SocioDemographicsProperties,
   TilesetLayerConfig,
 } from '@/types/types';
+import { cartoConfig } from '@/config/config';
+import { createWidgets } from './widgets/createWidgets';
+import { debounce } from './widgets/utils';
 
 const INITIAL_VIEW_STATE: MapViewState = {
   latitude: 39.8097343,
@@ -22,13 +26,19 @@ const INITIAL_VIEW_STATE: MapViewState = {
 function Map({
   pointConfig,
   tilesetConfig,
+  onRevenueSumChange,
 }: {
   pointConfig: PointLayerConfig;
   tilesetConfig: TilesetLayerConfig;
+  onRevenueSumChange?: (value: number | null) => void;
 }) {
+  const [dataSource, setDataSource] = useState<any>(null);
+  const [revenueSum, setRevenueSum] = useState<number | null>(null);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const deckCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const deckRef = useRef<Deck | null>(null);
+  const dataSourceRef = useRef<any>(null);
+  const tilesetSourceRef = useRef<any>(null);
 
   const formatTooltip = useCallback(
     (
@@ -67,12 +77,21 @@ function Map({
     [formatTooltip]
   );
 
+  const tilesetSource = vectorQuerySource({
+    ...cartoConfig,
+    sqlQuery: `select total_pop, households, median_income, income_per_capita, g.geom as geom, g.geoid from \`carto-do-public-data.usa_acs.demographics_sociodemographics_usa_blockgroup_2015_5yrs_20142018\` d join \`carto-do-public-data.carto.geography_usa_blockgroup_2015\` g on d.geoid=g.geoid `,
+  });
+  tilesetSourceRef.current = tilesetSource;
+
   const layers = useMemo(
-    () => createVectorLayer(pointConfig, tilesetConfig),
+    () =>
+      createVectorLayer(pointConfig, tilesetConfig, dataSource, tilesetSource),
     [pointConfig, tilesetConfig, deckRef.current]
   );
 
   useEffect(() => {
+    initSource();
+
     const deck = new Deck({
       canvas: deckCanvasRef.current!,
       initialViewState: INITIAL_VIEW_STATE,
@@ -88,11 +107,18 @@ function Map({
       interactive: false,
     });
 
+    const handleViewStateChange = ({
+      viewState,
+    }: {
+      viewState: MapViewState;
+    }) => {
+      const { longitude, latitude, ...rest } = viewState;
+      map?.jumpTo({ center: [longitude, latitude], ...rest });
+      debouncedUpdateSpatialFilter(viewState);
+    };
+
     deck.setProps({
-      onViewStateChange: ({ viewState }) => {
-        const { longitude, latitude, ...rest } = viewState;
-        map.jumpTo({ center: [longitude, latitude], ...rest });
-      },
+      onViewStateChange: handleViewStateChange,
     });
 
     return () => {
@@ -101,9 +127,42 @@ function Map({
     };
   }, []);
 
+  const initSource = async () => {
+    const source = await vectorTableSource({
+      ...cartoConfig,
+      tableName: 'carto-demo-data.demo_tables.retail_stores',
+    });
+    setDataSource(source);
+    dataSourceRef.current = source;
+
+    const initialFilter = createViewportSpatialFilter(
+      new WebMercatorViewport(INITIAL_VIEW_STATE).getBounds()
+    );
+    const initialWidgets = await createWidgets(source, initialFilter);
+    const initialSum = initialWidgets?.formula?.value ?? null;
+    setRevenueSum(initialSum);
+    onRevenueSumChange?.(initialSum);
+  };
+
+  const debouncedUpdateSpatialFilter = debounce(
+    async (viewState: MapViewState) => {
+      const ds = dataSourceRef.current;
+      if (!ds) return;
+      const viewport = new WebMercatorViewport(viewState);
+      const filter = createViewportSpatialFilter(viewport.getBounds());
+      const widgets = await createWidgets(ds, filter);
+      const sum = widgets?.formula?.value ?? null;
+      setRevenueSum(sum);
+      onRevenueSumChange?.(sum);
+    },
+    300
+  );
+
   useEffect(() => {
     if (deckRef.current) {
-      deckRef.current.setProps({ layers });
+      deckRef.current.setProps({
+        layers,
+      });
     }
   }, [layers]);
 

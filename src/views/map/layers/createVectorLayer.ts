@@ -1,16 +1,16 @@
 import {
   VectorTileLayer,
   colorBins,
-  vectorQuerySource,
-  vectorTableSource,
+  type TilejsonResult,
 } from '@deck.gl/carto';
 import type { Layer, PickingInfo } from '@deck.gl/core';
-import { cartoConfig } from '@/config/config';
 import type { PointLayerConfig, TilesetLayerConfig } from '@/types/types';
 
 export function createVectorLayer(
   pointConfig: PointLayerConfig,
   tilesetConfig: TilesetLayerConfig,
+  pointSource: TilejsonResult | Promise<TilejsonResult> | null,
+  tilesetSource: TilejsonResult | Promise<TilejsonResult> | null,
   onHover?: (info: PickingInfo) => void
 ): Layer[] {
   const { radius, fillColor, outlineColor, outlineWidth } = pointConfig;
@@ -19,15 +19,6 @@ export function createVectorLayer(
     colorPalette,
     outlineWidth: tilesetOutlineWidth,
   } = tilesetConfig;
-
-  const pointSource = vectorTableSource({
-    ...cartoConfig,
-    tableName: 'carto-demo-data.demo_tables.retail_stores',
-  });
-  const tilesetSource = vectorQuerySource({
-    ...cartoConfig,
-    sqlQuery: `select total_pop, households, median_income, income_per_capita, g.geom as geom, g.geoid from \`carto-do-public-data.usa_acs.demographics_sociodemographics_usa_blockgroup_2015_5yrs_20142018\` d join \`carto-do-public-data.carto.geography_usa_blockgroup_2015\` g on d.geoid=g.geoid `,
-  });
 
   const layers = [
     new VectorTileLayer({
