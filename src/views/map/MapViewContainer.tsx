@@ -6,6 +6,7 @@ import { SideBar } from '@/components/layout/sidebar/SideBar';
 import { LayerControls } from '@/components/controls/LayerControls';
 import { TILESET_COLOR_BY, TILESET_COLUMNS } from '@/types/types';
 import { WidgetControls } from '@/components/widgets/WidgetControls';
+import type { CategoryResponse } from '@carto/api-client';
 
 export function MapViewContainer() {
   const [pointConfig, setPointConfig] = useState<PointLayerConfig>({
@@ -21,9 +22,7 @@ export function MapViewContainer() {
     column: TILESET_COLUMNS[0],
   });
   const [revenueSum, setRevenueSum] = useState<number | null>(null);
-  const [categories, setCategories] = useState<
-    { name: string; value: number }[]
-  >([]);
+  const [categories, setCategories] = useState<CategoryResponse>();
 
   type ControlTab = 'widgets' | 'controls';
   const [value, setValue] = useState<ControlTab>('widgets');
