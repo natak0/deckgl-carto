@@ -10,7 +10,14 @@ export async function createWidgets(
     spatialFilter: currentViewStatePolygon,
   });
 
+  const revenueByStoretype = await dataSource.widgetSource.getCategories({
+    column: 'storetype',
+    operation: 'count',
+    spatialFilter: currentViewStatePolygon,
+  });
+
   return {
     formula,
+    categories: revenueByStoretype,
   };
 }

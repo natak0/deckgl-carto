@@ -27,13 +27,16 @@ function Map({
   pointConfig,
   tilesetConfig,
   onRevenueSumChange,
+  onCategoriesChange,
 }: {
   pointConfig: PointLayerConfig;
   tilesetConfig: TilesetLayerConfig;
   onRevenueSumChange?: (value: number | null) => void;
+  onCategoriesChange?: (value: { name: string; value: number }[]) => void;
 }) {
   const [dataSource, setDataSource] = useState<any>(null);
-  const [revenueSum, setRevenueSum] = useState<number | null>(null);
+  const [, setRevenueSum] = useState<number | null>(null);
+  const [, setCategories] = useState<any[]>([]);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const deckCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const deckRef = useRef<Deck | null>(null);
@@ -140,8 +143,10 @@ function Map({
     );
     const initialWidgets = await createWidgets(source, initialFilter);
     const initialSum = initialWidgets?.formula?.value ?? null;
+    setCategories(initialWidgets?.categories ?? []);
     setRevenueSum(initialSum);
     onRevenueSumChange?.(initialSum);
+    onCategoriesChange?.(initialWidgets?.categories ?? []);
   };
 
   const debouncedUpdateSpatialFilter = debounce(
@@ -152,8 +157,10 @@ function Map({
       const filter = createViewportSpatialFilter(viewport.getBounds());
       const widgets = await createWidgets(ds, filter);
       const sum = widgets?.formula?.value ?? null;
+      setCategories(widgets?.categories ?? []);
       setRevenueSum(sum);
       onRevenueSumChange?.(sum);
+      onCategoriesChange?.(widgets?.categories ?? []);
     },
     300
   );

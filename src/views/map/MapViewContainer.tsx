@@ -21,6 +21,9 @@ export function MapViewContainer() {
     column: TILESET_COLUMNS[0],
   });
   const [revenueSum, setRevenueSum] = useState<number | null>(null);
+  const [categories, setCategories] = useState<
+    { name: string; value: number }[]
+  >([]);
 
   type ControlTab = 'widgets' | 'controls';
   const [value, setValue] = useState<ControlTab>('widgets');
@@ -45,7 +48,9 @@ export function MapViewContainer() {
             <Tab value="widgets" label="Widgets" />
             <Tab value="controls" label="Controls" />
           </Tabs>
-          {value === 'widgets' && <WidgetControls revenueSum={revenueSum} />}
+          {value === 'widgets' && (
+            <WidgetControls revenueSum={revenueSum} categories={categories} />
+          )}
           {value === 'controls' && (
             <LayerControls
               pointConfig={pointConfig}
@@ -67,6 +72,7 @@ export function MapViewContainer() {
           pointConfig={pointConfig}
           tilesetConfig={tilesetConfig}
           onRevenueSumChange={setRevenueSum}
+          onCategoriesChange={setCategories}
         />
       </Box>
     </Box>
